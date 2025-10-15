@@ -6,17 +6,21 @@ use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'home'])
-    ->name('home');
+    ->name('camaros.home');
 Route::get('/show', [HomeController::class, 'show'])
-    ->name('show');
+    ->name('camaros.show');
 Route::get('/admin', [HomeController::class, 'admin'])
-    ->name('admin');
+    ->name('admin.admin');
 Route::get('/create', [HomeController::class, 'create'])
-    ->name('create');
+    ->name('camaros.create');
 Route::get('/edit', [HomeController::class, 'edit'])
-    ->name('edit');
+    ->name('camaros.edit');
 Route::get('/userProfile', [HomeController::class, 'userProfile'])
-    ->name('userProfile');
+    ->name('users.userProfile');
+Route::get('/registerUser', [HomeController::class, 'registerUser'])
+    ->name('users.registerUser');
+Route::get('/loginUser', [HomeController::class, 'loginUser'])
+    ->name('users.loginUser');
 
 
 
