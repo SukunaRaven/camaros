@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Camaros;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -11,17 +12,24 @@ class HomeController extends Controller
     {
         return view('camaros.home');
     }
-    public function show() {
-        $camaros = camaros::all();
-        return view('camaros.show');
+    public function show(Camaros $camaro)
+    {
+        // Eager load uploader en reviews
+        $camaro->load('uploader', 'reviews.user');
+
+        return view('camaros.show', compact('camaro'));
     }
+
+
     public function create()
     {
-        return view('camaros.create');
+        $categories = Category::all();
+        return view('camaros.edit', compact('categories'));
     }
-    public function edit()
+    public function edit(Camaros $camaro)
     {
-        return view('camaros.edit');
+        $categories = Category::all();
+        return view('camaros.edit', compact('camaro','categories'));
     }
     public function admin()
     {

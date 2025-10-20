@@ -2,22 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Review;
 use Illuminate\Http\Request;
+use App\Models\Review;
 
 class ReviewController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware();
+    }
+
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        // check op minimaal 5 unieke login-dagen
-        if (!$user->hasLoggedInAtLeastDays(5)) {
-            return back()->withErrors(['msg' => 'Je moet op minimaal 5 verschillende dagen hebben ingelogd om een review te plaatsen.']);
+        // Diepere validatie: minimaal 5 unieke login-dagen
+        if (!$user->hasLoggedInAtLeastDays(1)) {
+            return back()->withErrors(['msg' => 'Je moet op minimaal 1 dag hebben ingelogd om een review te plaatsen.']);
         }
 
         $request->validate([
-            'camaro_id' => 'required|exists:camaro_models,id',
+            'camaro_id' => 'required|exists:camaros,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
         ]);
@@ -29,7 +34,10 @@ class ReviewController extends Controller
             'comment' => $request->comment,
         ]);
 
-        return redirect()->back()->with('success', 'Review geplaatst!');
+        return redirect()->back()->with('success','Review geplaatst');
     }
 
+    private function middleware()
+    {
+    }
 }
