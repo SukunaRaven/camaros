@@ -2,88 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Camaros;
+use App\Models\Camaro;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\StoreCamaroRequest;
-use App\Http\Requests\UpdateCamaroRequest;
 
 class CamaroController extends Controller
 {
-    public function __construct()
+    // Home pagina
+    public function home()
     {
-        $this->middleware();
+        return view('camaro.home'); // alleen info over Camaro's
     }
 
-    public function index(Request $request)
+    // Show single Camaro
+    public function show(Camaro $camaro)
     {
-        $query = Camaros::with('category','uploader')
-            ->when($request->search, function($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
-            })
-            ->when($request->category, function($q) use ($request) {
-                $q->where('category_id', $request->category);
-            });
+        // Eager load category en uploader zodat $camaro->category en $camaro->uploader werken
+        $camaro->load('category', 'uploader');
 
-        $camaros = $query->paginate(12)->withQueryString();
-        $categories = Category::all();
-
-        return view('camaros.home', compact('camaros','categories'));
+        return view('camaro.show', compact('camaro'));
     }
 
-    public function show(Camaros $camaro)
-    {
-        return view('camaros.show', compact('camaro'));
-    }
 
+    // Formulier voor create
     public function create()
     {
         $categories = Category::all();
-        return view('camaros.create', compact('categories'));
+        return view('camaro.create', compact('categories'));
     }
 
-    public function store(StoreCamaroRequest $request)
+    // Store nieuwe Camaro
+    public function store(Request $request)
     {
-        $data = $request->validated();
-        $data['uploader_id'] = auth()->id();
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'year' => 'required|integer',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $data['user_id'] = auth()->id();
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('camaro_images','public');
             $data['image_url'] = '/storage/' . $path;
         }
 
-        Camaros::create($data);
+        Camaro::create($data);
 
-        return redirect()->route('camaro.index')->with('success','Camaro toegevoegd');
+        return redirect()->route('home')->with('success','Camaro toegevoegd');
     }
 
-    public function edit(Camaros $camaro)
+    // Formulier voor edit
+    public function edit(Camaro $camaro)
     {
         $categories = Category::all();
-        return view('camaros.edit', compact('camaro','categories'));
+        return view('camaro.edit', compact('camaro','categories'));
     }
 
-    public function update(UpdateCamaroRequest $request, Camaros $camaro)
+    // Update Camaro
+    public function update(Request $request, Camaro $camaro)
     {
-        $this->authorize('update', $camaro);
-
-        $data = $request->validated();
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'year' => 'required|integer',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|max:2048',
+        ]);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('camaro_images','public');
             $data['image_url'] = '/storage/' . $path;
-
-            if ($camaro->image_url) {
-                $oldPath = ltrim($camaro->image_url, '/');
-                if (str_starts_with($oldPath, 'storage/')) {
-                    $oldPath = substr($oldPath, strlen('storage/'));
-                }
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
         }
 
         $camaro->update($data);
@@ -91,40 +83,39 @@ class CamaroController extends Controller
         return redirect()->route('camaro.show', $camaro)->with('success','Camaro bijgewerkt');
     }
 
-    public function destroy(Camaros $camaro)
+    // Delete Camaro
+    public function destroy(Camaro $camaro)
     {
-        $this->authorize('delete', $camaro);
-
-        if ($camaro->image_url) {
-            $oldPath = ltrim($camaro->image_url, '/');
-            if (str_starts_with($oldPath, 'storage/')) {
-                $oldPath = substr($oldPath, strlen('storage/'));
-            }
-            if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
-            }
+        if ($camaro->image_url && Storage::disk('public')->exists(ltrim($camaro->image_url,'/'))) {
+            Storage::disk('public')->delete(ltrim($camaro->image_url,'/'));
         }
 
         $camaro->delete();
 
-        return redirect()->route('camaro.index')->with('success','Camaro verwijderd');
+        return redirect()->route('home')->with('success','Camaro verwijderd');
     }
 
-    public function toggleStatus(Request $request, Camaros $camaro)
+    public function camaroExhibition(Request $request)
     {
-        $this->authorize('toggleStatus', $camaro);
+        // Basis query
+        $query = Camaro::query()->with('category', 'uploader');
 
-        $camaro->is_active = !$camaro->is_active;
-        $camaro->save();
+        // Filter zoeken
+        if ($request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
 
-        return response()->json(['status' => $camaro->is_active]);
+        // Filter categorie
+        if ($request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        $camaros = $query->paginate(12)->withQueryString();
+        $categories = Category::all(); // Haal alle categorieën op
+
+        return view('camaro.camaroExhibition', compact('camaros', 'categories'));
     }
 
-    private function authorize(string $string, Camaros $camaro)
-    {
-    }
 
-    private function middleware()
-    {
-    }
 }

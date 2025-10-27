@@ -7,10 +7,23 @@ use App\Models\Category;
 
 class CategorySeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $cats = ['Classic','Modern','Concept'];
-        foreach($cats as $c) Category::create(['name' => $c]);
-    }
-}
+        $categories = [
+            'Classic',
+            'Muscle',
+            'Modern',
+            'Concept',
+        ];
 
+        foreach ($categories as $name) {
+            Category::firstOrCreate(['name' => $name]);
+        }
+
+        $this->call([
+            CategorySeeder::class,
+        ]);
+    }
+
+
+}

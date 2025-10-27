@@ -29,6 +29,6 @@ class Review extends Model
 
     public function camaros(): BelongsTo
     {
-        return $this->belongsTo(Camaros::class, 'camaro_id');
+        return $this->belongsTo(Camaro::class, 'camaro_id');
     }
 }

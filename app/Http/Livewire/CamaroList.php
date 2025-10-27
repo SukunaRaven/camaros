@@ -7,7 +7,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
-use App\Models\Camaros;
+use App\Models\Camaro;
 use App\Models\Category;
 
 
@@ -31,7 +31,7 @@ class CamaroList extends Component
 
     public function toggleStatus($id): void
     {
-        $camaro = Camaros::findOrFail($id);
+        $camaro = Camaro::findOrFail($id);
         if (auth()->user()->cannot('toggleStatus', $camaro)) {
             $this->dispatchBrowserEvent(['type'=>'error','message'=>'Geen toestemming']);
             return;
@@ -44,7 +44,7 @@ class CamaroList extends Component
 
     public function render(): View|Factory|Htmlable|Closure|string|\Illuminate\View\View
     {
-        $query = Camaros::with('category','uploader')
+        $query = Camaro::with('category','uploader')
             ->when($this->search, fn($q) => $q->where(fn($q2) => $q2->where('name','like','%'.$this->search.'%')->orWhere('description','like','%'.$this->search.'%')))
             ->when($this->category, fn($q) => $q->where('category_id',$this->category));
 

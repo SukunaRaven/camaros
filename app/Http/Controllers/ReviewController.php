@@ -22,7 +22,7 @@ class ReviewController extends Controller
         }
 
         $request->validate([
-            'camaro_id' => 'required|exists:camaros,id',
+            'camaro_id' => 'required|exists:camaro,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
         ]);
