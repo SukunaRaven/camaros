@@ -1,18 +1,43 @@
-<nav class="bg-gray-800 text-yellow-400 p-4 flex justify-between items-center">
+<nav class="bg-gray-800 text-yellow-400 p-4 flex justify-between items-center border-b border-yellow-500 shadow-md">
+    {{-- Linkerkant: Navigatie links --}}
     <div class="flex space-x-6 items-center">
-        <a href="{{ route('home') }}" class="font-bold text-xl">Camaro Garage</a>
-        <a href="{{ route('camaro.camaroExhibition') }}" class="hover:text-white">Alle Camaro’s</a>
-        <a href="{{ route('camaro.create') }}" class="hover:text-white">Voeg Camaro toe</a>
+        <a href="{{ route('home') }}" class="font-bold text-xl hover:text-white transition">
+            Camaro Garage
+        </a>
+
+        <a href="{{ route('camaro.camaroExhibition') }}" class="hover:text-white transition">
+            Camaro Exhibition
+        </a>
+
+        @auth
+            <a href="{{ route('camaro.create') }}" class="hover:text-white transition">
+                Add Camaro
+            </a>
+        @endauth
     </div>
 
-    <div class="space-x-4">
+    {{-- Rechterkant: Auth-links --}}
+    <div class="flex items-center space-x-4">
         @auth
-            <form method="POST" action="{{ route('logout') }}" class="inline">@csrf
-                <button type="submit" class="hover:text-white">Log uit</button>
-            </form>
+            {{-- Admin link --}}
+            @if(Auth::user()->role === 'admin')
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-white font-semibold transition">
+                    Admin
+                </a>
+            @else
+                {{-- Gewone gebruiker --}}
+                <a href="{{ route('profile.show') }}" class="hover:text-white transition">
+                    Profile
+                </a>
+            @endif
         @else
-            <a href="{{ route('login') }}" class="hover:text-white">Login</a>
-            <a href="{{ route('register') }}" class="hover:text-white">Register</a>
+            {{-- Login & Register --}}
+            <a href="{{ route('login') }}" class="hover:text-white transition">
+                Login
+            </a>
+            <a href="{{ route('register') }}" class="hover:text-white transition">
+                Register
+            </a>
         @endauth
     </div>
 </nav>

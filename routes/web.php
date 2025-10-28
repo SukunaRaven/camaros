@@ -3,13 +3,15 @@
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CamaroController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\CamaroAdminController;
 use Illuminate\Support\Facades\Route;
 
 // Home page
 Route::get('/', [CamaroController::class, 'home'])->name('home');
 Route::get('/camaro/exhibition', [CamaroController::class, 'camaroExhibition'])->name('camaro.camaroExhibition');
 
-// Authentication routes
+// Authentication
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
@@ -17,7 +19,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('/register', [RegisteredUserController::class, 'store']);
 
-// Camaro CRUD routes (auth required)
+// Camaro CRUD routes
 Route::middleware('auth')->group(function(){
     Route::get('/camaro/create', [CamaroController::class, 'create'])->name('camaro.create');
     Route::post('/camaro', [CamaroController::class, 'store'])->name('camaro.store');
@@ -27,7 +29,16 @@ Route::middleware('auth')->group(function(){
     Route::delete('/camaro/{camaro}', [CamaroController::class, 'destroy'])->name('camaro.destroy');
 });
 
-// Dashboard
-Route::middleware('auth')->get('/dashboard', function(){
-    return view('dashboard');
-})->name('dashboard');
+// Profile
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.updateEmail');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+});
+
+// Admin
+Route::middleware(['auth', 'can:isAdmin'])->group(function(){
+    Route::get('/admin', [CamaroAdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::delete('/admin/user/{user}', [CamaroAdminController::class, 'destroyUser'])->name('admin.user.destroy');
+});

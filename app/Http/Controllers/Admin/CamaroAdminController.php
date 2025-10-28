@@ -3,28 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Camaro;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 
 class CamaroAdminController extends Controller
 {
-    public function __construct()
+    public function dashboard()
     {
-        $this->middleware();
+        $users = User::all();
+        return view('admin.admin', compact('users'));
     }
 
-    public function index()
+    public function destroyUser(User $user): RedirectResponse
     {
-        $camaros = Camaro::with('category','uploader')->paginate(20);
-        return view('views.admin.admin', compact('camaros'));
-    }
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Je kunt jezelf niet verwijderen!');
+        }
 
-    public function destroy(Camaro $camaro)
-    {
-        $camaro->delete();
-        return redirect()->back()->with('success','Camaro verwijderd');
-    }
-
-    private function middleware()
-    {
+        $user->delete();
+        return back()->with('status', 'Gebruiker verwijderd!');
     }
 }

@@ -2,59 +2,71 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    // Toon profielpagina
+    public function show()
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = Auth::user();
+        return view('profile.show', compact('user'));
     }
 
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    // Update naam en profielfoto
+    public function updateProfile(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $user = Auth::user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'profile_photo' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_photo')) {
+            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            $data['profile_photo'] = '/storage/' . $path;
         }
 
-        $request->user()->save();
+        $user->update($data);
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
+    // Update email
+    public function updateEmail(Request $request)
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
 
-        $user = $request->user();
+        $user->update($data);
 
-        Auth::logout();
+        return redirect()->back()->with('success', 'Email updated successfully.');
+    }
 
-        $user->delete();
+    // Update wachtwoord
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $data = $request->validate([
+            'current_password' => ['required'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
 
-        return Redirect::to('/');
+        if (!Hash::check($data['current_password'], $user->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        $user->update(['password' => Hash::make($data['password'])]);
+
+        return redirect()->back()->with('success', 'Password updated successfully.');
     }
 }
