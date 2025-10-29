@@ -16,12 +16,12 @@
         @endauth
     </div>
 
-    {{-- Rechterkant: Auth-links --}}
+    {{-- Rechterkant: Auth-links + profielfoto + logout --}}
     <div class="flex items-center space-x-4">
         @auth
             {{-- Admin link --}}
             @if(Auth::user()->role === 'admin')
-                <a href="{{ route('admin.dashboard') }}" class="hover:text-white font-semibold transition">
+                <a href="{{ route('admin.admin') }}" class="hover:text-white font-semibold transition">
                     Admin
                 </a>
             @else
@@ -30,6 +30,22 @@
                     Profile
                 </a>
             @endif
+
+            {{-- Profielfoto --}}
+            <a href="{{ route('profile.show') }}">
+                <img src="{{ Auth::user()->profile_photo ? Storage::url(Auth::user()->profile_photo) : '/default-avatar.png' }}"
+                     alt="{{ Auth::user()->name }}"
+                     class="w-10 h-10 rounded-full object-cover border-2 border-yellow-400">
+            </a>
+
+            {{-- Logout knop --}}
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-400 transition text-sm">
+                    Logout
+                </button>
+            </form>
         @else
             {{-- Login & Register --}}
             <a href="{{ route('login') }}" class="hover:text-white transition">

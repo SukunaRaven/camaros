@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function(){
     Route::get('/camaro/{camaro}/edit', [CamaroController::class, 'edit'])->name('camaro.edit');
     Route::put('/camaro/{camaro}', [CamaroController::class, 'update'])->name('camaro.update');
     Route::delete('/camaro/{camaro}', [CamaroController::class, 'destroy'])->name('camaro.destroy');
+    Route::middleware(['auth'])->group(function () {Route::patch('/camaro/{camaro}/toggle-privacy', [CamaroController::class, 'togglePrivacy'])->name('camaro.togglePrivacy');});
 });
 
 // Profile
@@ -38,7 +39,8 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin
-Route::middleware(['auth', 'can:isAdmin'])->group(function(){
-    Route::get('/admin', [CamaroAdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::delete('/admin/user/{user}', [CamaroAdminController::class, 'destroyUser'])->name('admin.user.destroy');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin', [CamaroAdminController::class, 'index'])->name('admin.admin');
+    Route::delete('/admin/users/{user}', [CamaroAdminController::class, 'destroy'])->name('admin.user.destroy');
 });
+

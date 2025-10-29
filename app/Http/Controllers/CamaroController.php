@@ -9,30 +9,40 @@ use Illuminate\Support\Facades\Storage;
 
 class CamaroController extends Controller
 {
-    // Home pagina
     public function home()
     {
-        return view('camaro.home'); // alleen info over Camaro's
+        return view('camaro.home');
     }
 
-    // Show single Camaro
-    public function show(Camaro $camaro)
+    public function camaroExhibition(Request $request)
     {
-        // Eager load category en uploader zodat $camaro->category en $camaro->uploader werken
-        $camaro->load('category', 'uploader');
+        $query = Camaro::query()->with('category', 'uploader')
+            ->where('is_public', true); // alleen publieke Camaros
 
-        return view('camaro.show', compact('camaro'));
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        $camaros = $query->paginate(12)->withQueryString();
+        $categories = Category::all();
+
+        return view('camaro.camaroExhibition', compact('camaros', 'categories'));
     }
 
 
-    // Formulier voor create
     public function create()
     {
         $categories = Category::all();
         return view('camaro.create', compact('categories'));
     }
 
-    // Store nieuwe Camaro
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -52,17 +62,21 @@ class CamaroController extends Controller
 
         Camaro::create($data);
 
-        return redirect()->route('home')->with('success','Camaro toegevoegd');
+        return redirect()->route('home')->with('success', 'Camaro toegevoegd');
     }
 
-    // Formulier voor edit
+    public function show(Camaro $camaro)
+    {
+        $camaro->load('category', 'uploader');
+        return view('camaro.show', compact('camaro'));
+    }
+
     public function edit(Camaro $camaro)
     {
         $categories = Category::all();
-        return view('camaro.edit', compact('camaro','categories'));
+        return view('camaro.edit', compact('camaro', 'categories'));
     }
 
-    // Update Camaro
     public function update(Request $request, Camaro $camaro)
     {
         $data = $request->validate([
@@ -80,10 +94,9 @@ class CamaroController extends Controller
 
         $camaro->update($data);
 
-        return redirect()->route('camaro.show', $camaro)->with('success','Camaro bijgewerkt');
+        return redirect()->route('camaro.show', $camaro)->with('success', 'Camaro bijgewerkt');
     }
 
-    // Delete Camaro
     public function destroy(Camaro $camaro)
     {
         if ($camaro->image_url && Storage::disk('public')->exists(ltrim($camaro->image_url,'/'))) {
@@ -92,30 +105,34 @@ class CamaroController extends Controller
 
         $camaro->delete();
 
-        return redirect()->route('home')->with('success','Camaro verwijderd');
+        return redirect()->route('home')->with('success', 'Camaro verwijderd');
     }
 
-    public function camaroExhibition(Request $request)
+    public function toggleVisibility(Camaro $camaro)
     {
-        // Basis query
-        $query = Camaro::query()->with('category', 'uploader');
-
-        // Filter zoeken
-        if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('description', 'like', '%' . $request->search . '%');
+        // Alleen eigenaar mag toggle doen
+        if ($camaro->user_id !== auth()->id()) {
+            abort(403);
         }
 
-        // Filter categorie
-        if ($request->category) {
-            $query->where('category_id', $request->category);
-        }
+        $camaro->is_public = !$camaro->is_public;
+        $camaro->save();
 
-        $camaros = $query->paginate(12)->withQueryString();
-        $categories = Category::all(); // Haal alle categorieën op
-
-        return view('camaro.camaroExhibition', compact('camaros', 'categories'));
+        return redirect()->back()->with('success', 'Camaro visibility updated!');
     }
 
+    public function togglePrivacy(\App\Models\Camaro $camaro)
+    {
+        // Controleer dat de ingelogde gebruiker eigenaar is
+        if ($camaro->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Toggle public/private
+        $camaro->is_public = !$camaro->is_public;
+        $camaro->save();
+
+        return back()->with('success', 'Camaro visibility updated.');
+    }
 
 }
