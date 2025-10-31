@@ -16,9 +16,45 @@ class Camaro extends Model
         'year',
         'description',
         'category_id',
-        'user_id',
-        'image_url',
-        'is_public'
+        'image',
+
+        // Pricing and taxes
+        'fiscal_price',
+        'ready_to_drive_price',
+        'delivery_costs',
+        'road_tax',
+        'classification',
+        'body',
+        'seats',
+        'gearbox',
+        'segment',
+        'energy_label',
+        'additional_tax',
+        'introduction',
+        'end',
+
+        // Engine / Powertrain
+        'powertrain',
+        'powertrain_type',
+        'max_power',
+        'max_torque',
+        'drive',
+
+        // Fuel engine details
+        'cylinders',
+        'valves_per_cylinder',
+        'engine_capacity',
+        'bore_stroke',
+        'compression_ratio',
+        'max_power',
+        'max_torque',
+        'fuel_system',
+        'valve_control',
+        'turbo',
+        'catalytic_converter',
+        'fuel_tank',
+        'rpm_100',
+        'rpm_130',
     ];
 
     // Relatie naar User (uploader)

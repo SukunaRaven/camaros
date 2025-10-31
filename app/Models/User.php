@@ -32,4 +32,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Camaro::class);
     }
+
+    public function loginRecords()
+    {
+        return $this->hasMany(LoginRecord::class);
+    }
 }

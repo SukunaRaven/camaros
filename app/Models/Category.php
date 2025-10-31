@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
@@ -15,7 +16,8 @@ class Category extends Model
     {
     }
 
-    public function camaros() {
-        return $this->hasMany(Camaro::class);
+    public function camaros(): BelongsToMany
+    {
+        return $this->belongsToMany(Camaro::class);
     }
 }
