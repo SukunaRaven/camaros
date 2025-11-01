@@ -12,10 +12,8 @@ class Category extends Model
 
     protected $fillable = ['name'];
 
-    public static function firstOrCreate(array $array)
-    {
-    }
 
+    //Camaro can have multiple categories (Uncontinued), categories can belong to multiple Camaro
     public function camaros(): BelongsToMany
     {
         return $this->belongsToMany(Camaro::class);

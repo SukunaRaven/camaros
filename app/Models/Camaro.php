@@ -6,6 +6,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Camaro extends Model
 {
@@ -57,14 +58,14 @@ class Camaro extends Model
         'rpm_130',
     ];
 
-    // Relatie naar User (uploader)
-    public function uploader(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    //Relation with User (Uploader)
+    public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relatie naar Category
-    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    // Relation to category
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }

@@ -13,22 +13,18 @@ class CamaroController extends Controller
 
     public function __construct()
     {
-        // Load bad words from storage/app/bad_words.txt
+        //Load curse words from bad_words.txt (currently empty)
         $this->badWords = file(storage_path('app/bad_words.txt'), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     }
 
-    /**
-     * Home page - show latest Camaros
-     */
+    //Home page
     public function home()
     {
         $camaros = Camaro::latest()->take(10)->get();
         return view('camaro.home', compact('camaros'));
     }
 
-    /**
-     * Camaro exhibition - show all public Camaros
-     */
+    //Show all public Camaro's
     public function camaroExhibition(Request $request)
     {
         $query = Camaro::query()->with('category', 'uploader')
@@ -51,18 +47,15 @@ class CamaroController extends Controller
         return view('camaro.camaroExhibition', compact('camaros', 'categories'));
     }
 
-    /**
-     * Show Camaro creation form
-     */
+
+     //Show the Camaro creation form
     public function create()
     {
         $categories = Category::all();
         return view('camaro.create', compact('categories'));
     }
 
-    /**
-     * Store a new Camaro
-     */
+     //Store new Camaro
     public function store(Request $request)
     {
         $data = $this->validateCamaro($request);
@@ -78,27 +71,29 @@ class CamaroController extends Controller
         return redirect()->route('home')->with('success', 'Camaro created successfully!');
     }
 
-    /**
-     * Show a single Camaro
-     */
+
+     //Show a single Camaro
     public function show(Camaro $camaro)
     {
         $camaro->load('category', 'uploader');
         return view('camaro.show', compact('camaro'));
     }
 
-    /**
-     * Show Camaro edit form
-     */
+    //Show edit form for Camaro's
     public function edit(Camaro $camaro)
     {
         $categories = Category::all();
+
+        //Only uploader can edit post
+        if ($camaro->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         return view('camaro.edit', compact('camaro', 'categories'));
     }
 
-    /**
-     * Update a Camaro
-     */
+
+    //Update the edited Camaro
     public function update(Request $request, Camaro $camaro)
     {
         $data = $this->validateCamaro($request);
@@ -110,12 +105,16 @@ class CamaroController extends Controller
 
         $camaro->update($data);
 
+        //Only uploader can update post
+        if ($camaro->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         return redirect()->route('camaro.show', $camaro)->with('success', 'Camaro updated successfully!');
     }
 
-    /**
-     * Delete a Camaro
-     */
+
+    //Delete the Camaro
     public function destroy(Camaro $camaro)
     {
         if ($camaro->image_url && Storage::disk('public')->exists(ltrim($camaro->image_url,'/'))) {
@@ -124,14 +123,19 @@ class CamaroController extends Controller
 
         $camaro->delete();
 
+        //Only uploader can delete post
+        if ($camaro->user_id !== auth()->id()) {
+            abort(403);
+        }
+
         return redirect()->route('home')->with('success', 'Camaro deleted successfully!');
     }
 
-    /**
-     * Validate Camaro input and filter bad words from optional fields
-     */
+
+    //Validate input and filter curse words from fields
     protected function validateCamaro(Request $request): array
     {
+        //Fields are required, determined if numbers, images or letters,
         $data = $request->validate([
             'name'                 => 'required|string|max:255',
             'year'                 => 'required|integer',
@@ -190,4 +194,15 @@ class CamaroController extends Controller
 
         return $data;
     }
+
+    //Privacy toggle
+    public function togglePrivacy($id)
+    {
+        $camaro = Camaro::findOrFail($id);
+        $camaro->is_public = !$camaro->is_public;
+        $camaro->save();
+
+        return redirect()->back()->with('success', 'Camaro privacy updated successfully.');
+    }
+
 }

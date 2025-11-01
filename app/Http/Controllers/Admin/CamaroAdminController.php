@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 
 class CamaroAdminController extends Controller
 {
-    // toon admin dashboard met alle users
+    //Show admin page with all users
     public function index()
     {
         $user = auth()->user();
@@ -20,15 +20,15 @@ class CamaroAdminController extends Controller
     }
 
 
-    // verwijder gebruiker (niet jezelf)
+    //Delete users (not yourself)
     public function destroy(User $user)
     {
-        // prevent deleting yourself
+        //Prevent deleting yourself
         if (auth()->id() === $user->id) {
             return redirect()->route('admin.admin')->with('error', 'Je kunt jezelf niet verwijderen.');
         }
 
-        // (optioneel) extra check: alleen verwijderen als niet admin, of vraag bevestiging
+        //Extra check: Don't delete admins or ask to make sure.
         $user->delete();
 
         return redirect()->route('admin.admin')->with('success', 'Gebruiker verwijderd.');

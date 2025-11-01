@@ -23,16 +23,20 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    //Make sure user is admin
     public function isAdmin(): bool
     {
+        //Give TRUE if user is admin, give FALSE if user isn't admin
         return $this->role === 'admin';
     }
 
+    //One user can upload multiple Camaro's
     public function camaros()
     {
         return $this->hasMany(Camaro::class);
     }
 
+    //One user can have multiple logins
     public function loginRecords()
     {
         return $this->hasMany(LoginRecord::class);
